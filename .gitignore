@@ -1,0 +1,8 @@
+*.pyc
+.vscode
+batch_images/
+batch_post_processed_images/
+batch_images/*
+batch_post_process_images/*
+fonts/
+*/__pycache__/*

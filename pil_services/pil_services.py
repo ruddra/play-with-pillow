@@ -13,17 +13,16 @@ except ImportError:
     logger.error("You will need Django for Django related Processing")
 
 
-
-class PILService(LoggerServiceMixin):
+class PILService(object):
     """
     PIL Services
     """
-    logger = logger
 
     def __init__(self, size=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if not size:
             self.size = 1200, 1200
+        self.logger = logger
 
     def get_resize_image_size(self, image, baseheight=None):
         """
@@ -130,7 +129,7 @@ class PILService(LoggerServiceMixin):
         Write Text over Image
         image: PIL Image object
         font: Font Object (Django Font Object)
-        text: String Text 
+        text: String Text
         position: position from where the texts will be start printing
         color: print text with color
         size: size of text
@@ -147,8 +146,35 @@ class PILService(LoggerServiceMixin):
         draw.text(position, text, font=font, fill=color)
         return image
 
+    def convert_mode(self, img, mode="RGBA"):
+        return img.convert(mode)
+
+    def get_text_size(self, img_height, percentage):
+        return int(img_height/percentage)
+
+    def water_mark_on_image(self, image, text, percentage, path=None, margin=5, opacity=255, font=None):
+        """
+        Write watermark on image
+        """
+        if font:
+            path = font.path
+        image = self.convert_mode(image)
+        width, height = image.size
+        size = self.get_text_size(height, percentage)
+        font = self.get_font(path, size)
+        txt = Image.new('RGBA', image.size, (255, 255, 255, 0))
+        draw = ImageDraw.Draw(txt)
+        textwidth, textheight = draw.textsize(text, font)
+        x = width - textwidth - margin
+        y = height - textheight - margin
+
+        draw.text((x, y), text, font=font,  fill=(255, 255, 255, opacity))
+
+        combined = Image.alpha_composite(image, txt)
+        return combined
+
     def write_list_on_image(self, image, data,
-                            init_position, gap, color, size,font=None, path=None, is_horizontal=True):
+                            init_position, gap, color, size, font=None, path=None, is_horizontal=True):
         """
         Write List of data in Image
         image: PIL Image object
