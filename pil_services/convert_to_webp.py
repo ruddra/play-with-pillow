@@ -15,21 +15,33 @@ class ConvertToWebp:
         self.convert_image_types = convert_image_types
         # list of extension types, empty list will take any format of image
 
+    def should_convert(self, ext):
+        if len(self.convert_image_types) > 0:
+            if ext in self.convert_image_types:
+                return True
+        elif len(self.convert_image_types) == 0:
+            return True
+        return False
+
     def start(self):
         for root, dirs, files in os.walk(self.directory):
             for file in files:
+                print('processing file: {}'.format(file))
                 infile = os.path.join(root, file)
                 name, ext = os.path.splitext(file)
-                if len(self.convert_image_types) > 0 and ext not in self.convert_image_types:
+                if not self.should_convert(ext):
                     continue
                 try:
                     im = Image.open(infile)
                     im.save(os.path.join(root, name) + ".webp", "WEBP")
                     if self.replace_files:
+                        print("removing {}".format(infile))
                         os.remove(infile)
                 except Exception as e:
                     print(e)
 
 
 if __name__ == "__main__":
-    ConvertToWebp('/path/to/images').start()
+    ConvertToWebp(
+        '/path/to/image'
+    ).start()
